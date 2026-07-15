@@ -1,0 +1,5 @@
+# Runtime dependencies for the FastAPI web application.
+fastapi
+uvicorn[standard]
+jinja2
+python-multipart

@@ -1,0 +1,5 @@
+# Local Python files that should not be committed to the project.
+__pycache__/
+*.py[cod]
+.venv/
+.env
