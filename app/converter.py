@@ -99,10 +99,23 @@ def fetch_markdown(owner: str, repository: str) -> Tuple[str, List[Tuple[str, st
     return metadata.get("name", repository), chapters
 
 
+_SAFE_LINK = re.compile(r"^(https?://|mailto:|#|/|\.{0,2}/)")
+
+
+def _link(match: re.Match) -> str:
+    label, target = match.group(1), match.group(2)
+    if not _SAFE_LINK.match(target):
+        return label
+    return '<a href="%s">%s</a>' % (target, label)
+
+
 def _inline(text: str) -> str:
     rendered = escape(text)
     rendered = re.sub(r"`([^`]+)`", r"<code>\1</code>", rendered)
-    rendered = re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", r'<a href="\2">\1</a>', rendered)
+    # Images are not embedded in the EPUB, so keep their alt text instead of
+    # leaving a stray "!" and a link to a file that is not in the book.
+    rendered = re.sub(r"!\[([^\]]*)\]\(([^)\s]+)\)", r"\1", rendered)
+    rendered = re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", _link, rendered)
     rendered = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", rendered)
     rendered = re.sub(r"(?<!\*)\*([^*]+)\*(?!\*)", r"<em>\1</em>", rendered)
     return rendered

@@ -57,6 +57,15 @@ class MarkdownTests(unittest.TestCase):
         self.assertIn("<strong>read</strong>", html)
         self.assertIn("<em>docs</em>", html)
 
+    def test_images_become_alt_text_not_broken_links(self):
+        html = markdown_to_xhtml("![diagram](images/flow.png)")
+        self.assertEqual(html, "<p>diagram</p>")
+
+    def test_unsafe_link_schemes_are_not_rendered_as_links(self):
+        html = markdown_to_xhtml("[click](javascript:alert(1))")
+        self.assertNotIn("href", html)
+        self.assertIn("click", html)
+
 
 class BuildEpubTests(unittest.TestCase):
     def test_builds_a_valid_container_and_chapters(self):
