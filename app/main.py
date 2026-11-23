@@ -1,11 +1,13 @@
-"""The FastAPI application for the GitBookify Day 1 scaffold."""
+"""The FastAPI application for GitBookify."""
 
 from pathlib import Path
 
 from fastapi import FastAPI, Form, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 from fastapi.templating import Jinja2Templates
+from starlette.concurrency import run_in_threadpool
 
+from app.converter import ConversionError, convert_repository
 
 # Keep the template folder next to the application code so it is easy to find.
 BASE_DIR = Path(__file__).resolve().parent
@@ -22,10 +24,18 @@ async def home(request: Request):
 
 @app.post("/convert", response_class=HTMLResponse)
 async def convert(request: Request, repository_url: str = Form(...)):
-    """Accept the form submission; EPUB conversion will be added in a later phase."""
-    message = "Coming Soon: EPUB conversion is not available yet."
-    return templates.TemplateResponse(
-        request,
-        "index.html",
-        {"message": message, "repository_url": repository_url},
+    """Build an EPUB from the repository's Markdown files and send it as a download."""
+    try:
+        filename, epub = await run_in_threadpool(convert_repository, repository_url)
+    except ConversionError as error:
+        return templates.TemplateResponse(
+            request,
+            "index.html",
+            {"message": str(error), "repository_url": repository_url},
+            status_code=400,
+        )
+    return Response(
+        content=epub,
+        media_type="application/epub+zip",
+        headers={"Content-Disposition": 'attachment; filename="%s"' % filename},
     )
