@@ -58,7 +58,8 @@ GitBookify/
 python -m unittest discover -s tests
 ```
 
-The tests use only the standard library and do not touch the network.
+The tests use only the standard library and do not touch the network. A
+successful run ends with `Ran 11 tests` and `OK`.
 
 ## Limits
 
